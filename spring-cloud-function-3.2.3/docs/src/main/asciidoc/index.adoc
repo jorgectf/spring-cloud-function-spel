@@ -1,0 +1,22 @@
+= Spring Cloud Function Reference Documentation
+Mark Fisher, Dave Syer, Oleg Zhurakousky, Anshul Mehra
+
+*{project-version}*
+
+:docinfo: shared
+
+The reference documentation consists of the following sections:
+
+[horizontal]
+<<spring-cloud-function.adoc#,Reference Guide>> :: Spring Cloud Function Reference
+https://github.com/spring-cloud/spring-cloud-function/tree/master/spring-cloud-function-samples/function-sample-cloudevent[Cloud Events] :: Cloud Events
+https://github.com/spring-cloud/spring-cloud-function/tree/master/spring-cloud-function-rsocket[RSocket] :: RSocket
+<<aws.adoc#,AWS Adapter>> :: AWS Adapter Reference
+<<azure.adoc#, Azure Adapter>> :: Azure Adapter Reference
+<<gcp.adoc#, GCP Adapter>> :: GCP Adapter Reference
+
+
+Relevant Links:
+
+[horizontal]
+https://projectreactor.io/[Reactor] :: Project Reactor

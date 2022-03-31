@@ -1,0 +1,3 @@
+*{project-version}*
+
+include::adapters/gcp-intro.adoc[]

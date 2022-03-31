@@ -1,0 +1,3 @@
+*{project-version}*
+
+include::adapters/azure-intro.adoc[]

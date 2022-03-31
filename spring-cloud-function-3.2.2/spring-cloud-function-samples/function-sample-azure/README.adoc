@@ -1,0 +1,113 @@
+You can run this Azure function locally, similar to other Spring Cloud Function samples, however 
+this time by using the Azure Maven plugin, as the Microsoft Azure functions execution context must be available.
+
+----
+# Build and run package 
+$ mvn clean package 
+$ mvn azure-functions:run
+----
+
+The `uppercase` function is of the following signature `Function<Message<String>, String> uppercase()`. Its expected input is JSON, 
+therefore we need t0 provide the appropriate content-type (in this case `application/json`). 
+
+Test the function using _curl_ and notice that the URL is formed by concatenating `<function url>/api/<function name>`
+----
+# testing with cURL
+$ curl -H "Content-Type: application/json" localhost:7071/api/uppercase -d '{"greeting": "hello", "name": "your name"}'
+
+# result
+{
+  "greeting": "HELLO",
+  "name": "YOUR NAME"
+}
+----
+
+The HTTP headers of the incoming request will be copied into input Message's MessageHeaders, so they become accessible if need to. 
+It is done in implementation of `UppercaseHandler` which extends `FunctionInvoker`. 
+
+NOTE: Implementation of `FunctionInvoker` (your handler), should contain the least amount of code. It is really a type-safe way to define 
+and configure function to be recognized as Azure Function. 
+Everything else should be delegated to the base `FunctionInvoker` via `handleRequest(..)` callback which will invoke your function, taking care of 
+necessary type conversion, transformation etc.
+
+----
+@FunctionName("uppercase")
+public String execute(@HttpTrigger(name = "req", methods = {HttpMethod.GET,
+			HttpMethod.POST}, authLevel = AuthorizationLevel.ANONYMOUS) HttpRequestMessage<Optional<String>> request,
+	ExecutionContext context) {
+	Message<String> message = MessageBuilder.withPayload(request.getBody().get()).copyHeaders(request.getHeaders()).build();
+	return handleRequest(message, context);
+}
+----
+
+
+The `echo` function does the same as the `uppercase` less the actual uppercasing. However, the important difference to notice is that function itself 
+takes primitive `String` as its input (i.e., `public Function<String, String> echo()`) while the actual handler passes instance of `Message` the same way as with `uppercase`. The framework recognizes that you only care about the payload and extracts it from the `Message` before calling the function. 
+
+
+There is also a reactive version of 'uppercase' - `uppercaseReactive` which will produce the same result, but 
+demonstrates and validates the ability to use reactive functions with Azure.
+
+To run locally on top of Azure Functions, and to deploy to your live Azure environment, you will need the Azure Functions Core Tools installed along with the Azure CLI (see https://docs.microsoft.com/en-us/azure/azure-functions/functions-create-first-java-maven for more details).
+
+To deploy the function to your live Azure environment, including an automatic provisioning of an HTTPTrigger for the function:
+----
+# login to Azure from the CLI
+$ az login
+
+# deploy the function
+$ mvn azure-functions:deploy
+
+[INFO] Authenticate with Azure CLI 2.0
+[INFO] The specified function app does not exist. Creating a new function app...
+[INFO] Successfully created the function app: function-sample-azure
+[INFO] Trying to deploy the function app...
+[INFO] Trying to deploy artifact to function-sample-azure...
+[INFO] Successfully deployed the artifact to https://function-sample-azure.azurewebsites.net
+[INFO] Successfully deployed the function app at https://function-sample-azure.azurewebsites.net
+[INFO] ------------------------------------------------------------------------
+[INFO] BUILD SUCCESS
+[INFO] ------------------------------------------------------------------------
+
+# Note: 
+# the function URL is: https://function-sample-azure.azurewebsites.net
+# the function can be accessed at: https://function-sample-azure.azurewebsites.net/api/uppercase
+----
+
+On another terminal try this: 
+----
+# testing
+curl https://<azure-function-url-from-the-log>/api/uppercase -d '{"greeting": "hello", "name": "your name"}'
+
+# testing with cURL
+$ curl -H "Content-Type: application/json" https://function-sample-azure.azurewebsites.net/api/uppercase -d '{"greeting": "hello", "name": "your name"}'
+# result
+{
+  "greeting": "HELLO",
+  "name": "YOUR NAME"
+}
+----
+
+Please ensure that you use the right URL for the function above. 
+
+Alternatively you can test the function in the Azure Dashboard UI:
+
+* click on the Dashboard
+* click on the function app `function-sample-azure` 
+* click on the left nav `Functions` and click the function name `uppercase`
+* click on the left nav `Code and Test` and at the top of the page `Test/Run`
+* In the body of the request, on the right-hand side, paste the same example we have used above:
+----
+{
+  "greeting": "hello",
+  "name": "your name"
+}
+
+# observe the HTTP response content
+{
+  "greeting": "HELLO",
+  "name": "YOUR NAME"
+}
+----
+
+Please note that the Dashhboard provides by default information on Function Execution Count, Memory Consumption and Execution Time.
