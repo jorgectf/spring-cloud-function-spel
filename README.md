@@ -21,3 +21,24 @@ Fix commit: https://github.com/spring-cloud/spring-cloud-function/commit/dc5128b
 
 * https://github.com/hktalent/spring-spel-0day-poc
 * https://github.com/RanDengShiFu/CVE-2022-22963
+
+### CodeQL quick&dirty Source
+
+Add to `java/ql/lib/Customizations.qll`
+
+```codeql
+private import semmle.code.java.dataflow.FlowSources
+
+class SpringMessage extends DataFlow::Node, RemoteFlowSource {
+  SpringMessage() {
+    this.asExpr() =
+      any(MethodAccess m |
+        m.getMethod()
+            .hasQualifiedName("org.springframework.messaging",
+              any(string s | s.matches("Message%")), "get")
+      )
+  }
+
+  override string getSourceType() { result = "org.springframework.messaging.Message" }
+}
+```
